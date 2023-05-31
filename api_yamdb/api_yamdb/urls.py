@@ -16,6 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
+from rest_framework.routers import DefaultRouter
+from .views import ReviewViewSet
+
+router = DefaultRouter()
+
+
+router.register(r'titles/(?P<title_id>\d+)/reviews',
+                ReviewViewSet, basename='reviews')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
