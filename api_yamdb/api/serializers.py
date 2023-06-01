@@ -1,7 +1,7 @@
 import datetime as dt
 
 from django.db.models import Avg
-from rest_framework import serializers
+from rest_framework import serializers, validators
 
 from reviews.models import Category, Genre, Title
 
@@ -10,25 +10,50 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('id', 'name', 'slug')
+        fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('id', 'name', 'slug')
+        fields = ('name', 'slug')
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    year = serializers.IntegerField()
     rating = serializers.SerializerMethodField(read_only=True)
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating', 'description', 'category', 'genre')
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'category', 'genre'
+        )
+
+    def get_rating(self, obj):
+        rating = obj.review.aggregate(Avg('score'))
+        return rating['score__avg']
+        # в модели Reviews нужно использовать поле 'title'
+        # c related_name 'reviews' !!!
+
+
+class TitleCreateSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug',
+        required=True
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        required=True,
+        many=True
+    )
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'description', 'category', 'genre')
 
     def validate_year(self, value):
         if value > dt.datetime.now().year:
@@ -37,6 +62,9 @@ class TitleSerializer(serializers.ModelSerializer):
             )
         return value
 
-    def get_rating(self, obj):
-        return obj.reviews.aggregate(Avg('score'))
-        # нужно поле 'title' c related_name 'reviews' в модели Reviews
+    validators = [
+        validators.UniqueTogetherValidator(
+            queryset=Title.objects.all(),
+            fields=['name', 'year', 'category']
+        )
+    ]
