@@ -1,7 +1,5 @@
 from rest_framework import permissions
 
-ROLES = ('auth_user', 'moderator', 'admin')
-
 
 class AdminOrReadOnly(permissions.BasePermission):
 
@@ -18,6 +16,8 @@ class AuthorOrModeratorOrReadOnly(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return (request.method in permissions.SAFE_METHODS
-                or request.user == 'moderator'
+                or request.user.is_moderator
                 or obj.author == request.user)
-    # в моделях Review и Comments нужно использовать поле 'author'!!!
+
+    # в случае, если в моделях Review и Comments используется поле 'author'!!!
+    # с модератором возможно нужно в юзерах работать
