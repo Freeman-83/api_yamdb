@@ -1,46 +1,44 @@
 from django.db import models
 
 
-class Review(models.Model):
-    pass
-
-
 class Category(models.Model):
-    name = models.CharField('Категория', unique=True, max_length=64)
-    slug = models.SlugField('URL_category', unique=True)
+    name = models.CharField('Категория', unique=True, max_length=256)
+    slug = models.SlugField('URL_category', unique=True, max_length=50)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['slug']
         verbose_name = 'Category'
         verbose_name_plural = 'Categories'
 
     def __str__(self):
-        return self.name
+        return self.slug
 
 
 class Genre(models.Model):
-    name = models.CharField('Жанр', unique=True, max_length=64)
-    slug = models.SlugField('URL_genre', unique=True)
+    name = models.CharField('Жанр', unique=True, max_length=256)
+    slug = models.SlugField('URL_genre', unique=True, max_length=50)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['slug']
         verbose_name = 'Genre'
         verbose_name_plural = 'Genres'
 
     def __str__(self):
-        return self.name
+        return self.slug
 
 
 class Title(models.Model):
-    name = models.CharField('Наименование произведения', max_length=64)
-    description = models.TextField('Описание')
-    year = models.DateTimeField(
-        'Дата выхода/публикации', auto_now_add=True, db_index=True
-    )
+    name = models.CharField('Наименование произведения', max_length=256)
+    year = models.IntegerField('Дата выхода/публикации')
+    description = models.TextField('Описание', null=True, blank=True)
     category = models.ForeignKey(
-        Category, on_delete=models.SET_NULL, related_name='titles'
+        Category,
+        on_delete=models.SET_NULL,
+        related_name='titles',
+        null=True,
+        blank=True
     )
-    genres = models.ManyToManyField(
+    genre = models.ManyToManyField(
         Genre, through='TitleGenre'
     )
 
