@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from reviews.models import Comment, Title, Review
-from rest_framework.generics import get_object_or_404
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
+from reviews.models import Comment, Review, Title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -9,7 +9,6 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
         slug_field='name', read_only=True)
-    # rating = serializers.IntegerField(read_only=True)
 
     def validate(self, data):
         request = self.context['request']
