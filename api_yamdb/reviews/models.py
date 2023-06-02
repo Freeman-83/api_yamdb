@@ -1,4 +1,5 @@
 from django.db import models
+# <<<<<<< HEAD
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -21,3 +22,7 @@ class Review(models.Model):
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации', auto_now_add=True)
 
+# =======
+
+# Create your models here.
+# >>>>>>> 5dcb03896c9efbcd0c3e74492654873b55d49e21
