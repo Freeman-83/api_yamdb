@@ -5,7 +5,6 @@ from reviews.models import Comment, Review, Title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    title = serializers.SlugRelatedField(slug_field='name', read_only=True)
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
         slug_field='name', read_only=True)
@@ -23,15 +22,14 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = '__all__'
+        fields = ('text', 'score', 'author', 'pub_date')
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    review = serializers.SlugRelatedField(slug_field='text', read_only=True)
     author = serializers.SlugRelatedField(
         slug_field='username', read_only=True
     )
 
     class Meta:
         model = Comment
-        fields = '__all'
+        fields = ('text', 'author', 'pub_date')
