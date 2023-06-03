@@ -19,7 +19,7 @@ class Review(models.Model):
         verbose_name='Текст'
     )
     score = models.PositiveSmallIntegerField(
-        verbose_name='Рейтинг',
+        verbose_name='Оценка',
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     author = models.ForeignKey(

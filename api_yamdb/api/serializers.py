@@ -7,7 +7,7 @@ from reviews.models import Comment, Review, Title
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
-        slug_field='name', read_only=True)
+        slug_field='username', read_only=True)
 
     def validate(self, data):
         request = self.context['request']
