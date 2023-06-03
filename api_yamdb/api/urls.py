@@ -9,17 +9,21 @@ from .views import (CategoryViewSet,
 
 app_name = 'api'
 
-router = DefaultRouter()
+router_api_v1 = DefaultRouter()
 
-router.register(r'categories', CategoryViewSet)
-router.register(r'genres', GenreViewSet)
-router.register(r'titles', TitleViewSet)
-router.register(r'titles/(?P<title_id>\d+)/reviews',
-                ReviewViewSet,
-                basename='reviews')
-router.register(r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
-                CommentViewSet,
-                basename='comments')
+router_api_v1.register(r'categories', CategoryViewSet)
+router_api_v1.register(r'genres', GenreViewSet)
+router_api_v1.register(r'titles', TitleViewSet)
+router_api_v1.register(
+    r'titles/(?P<title_id>\d+)/reviews',
+    ReviewViewSet,
+    basename='reviews'
+)
+router_api_v1.register(
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentViewSet,
+    basename='comments'
+)
 
 
 
