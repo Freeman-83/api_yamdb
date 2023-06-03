@@ -25,14 +25,6 @@ router_api_v1.register(
     basename='comments'
 )
 
-
-
-
-
-
-
-
-
 urlpatterns = [
-    path('v1/', include(router.urls)),
+    path('v1/', include(router_api_v1.urls)),
 ]
