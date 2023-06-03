@@ -78,14 +78,18 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('text', 'score', 'author', 'pub_date')
+        fields = ('id', 'text', 'score', 'author', 'pub_date')
 
-    validators = [
-        validators.UniqueTogetherValidator(
-            queryset=Review.objects.all(),
-            fields=['title', 'author']
+    def validate(self, data):
+        request = self.context['request']
+        author = request.user
+        title = get_object_or_404(
+            Title, pk=self.context['view'].kwargs.get('title_id')
         )
-    ]
+        if request.method == 'POST':
+            if Review.objects.filter(title=title, author=author):
+                raise ValidationError('Можно оставить только один отзыв')
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -95,4 +99,4 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('text', 'author', 'pub_date')
+        fields = ('id', 'text', 'author', 'pub_date')

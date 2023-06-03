@@ -62,8 +62,9 @@ class TitleGenre(models.Model):
     class Meta:
         ordering = ['title']
         constraints = [
-            models.UniqueConstraint(fields=['title', 'genre'],
-                                    name='unique_title_genre')
+            models.UniqueConstraint(
+                fields=['title', 'genre'],
+                name='unique_title_genre')
         ]
 
     def __str__(self):
@@ -77,12 +78,9 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    text = models.TextField(
-        verbose_name='Текст'
-    )
+    text = models.TextField('Текст')
     score = models.PositiveSmallIntegerField(
-        verbose_name='Оценка',
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        'Оценка', validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     author = models.ForeignKey(
         User,
@@ -92,15 +90,17 @@ class Review(models.Model):
     )
 
     pub_date = models.DateTimeField(
-        verbose_name='Дата публикации',
-        auto_now_add=True
+        'Дата публикации', auto_now_add=True
     )
 
     class Meta:
         verbose_name = 'Отзыв',
         verbose_name_plural = 'Отзывы',
-        constraints = [models.UniqueConstraint(
-            fields=['title', 'author'], name='unique_review')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review'
+            )
         ]
 
 
@@ -111,17 +111,15 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    text = models.TextField(
-        verbose_name='Текст'
-    )
+    text = models.TextField('Текст')
     author = models.ForeignKey(
         User,
+        verbose_name='Автор',
         on_delete=models.CASCADE,
         related_name='comments'
     )
     pub_date = models.DateTimeField(
-        verbose_name='Дата публикации',
-        auto_now_add=True
+        'Дата публикации', auto_now_add=True
     )
 
     class Meta:
