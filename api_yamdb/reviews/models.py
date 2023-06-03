@@ -24,6 +24,8 @@ class CustomUser(AbstractUser):
         choices=ROLE_CHOICES,
         default=USER
     )
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
 
     class Meta:
         constraints = [
