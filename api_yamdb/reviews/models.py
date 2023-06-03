@@ -64,12 +64,3 @@ class TitleGenre(models.Model):
 
     def __str__(self):
         return f'{self.title} - {self.genre}'
-
-
-# Заглушка
-class Review(models.Model):
-    text = models.TextField()
-    score = models.IntegerField()
-    title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='review'
-    )

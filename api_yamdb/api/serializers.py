@@ -1,5 +1,4 @@
 import datetime as dt
-
 from django.db.models import Avg
 from rest_framework import serializers, validators
 
@@ -32,10 +31,8 @@ class TitleSerializer(serializers.ModelSerializer):
         )
 
     def get_rating(self, obj):
-        rating = obj.review.aggregate(Avg('score'))
+        rating = obj.reviews.aggregate(Avg('score'))
         return rating['score__avg']
-        # в модели Reviews нужно использовать поле 'title'
-        # c related_name 'reviews' !!!
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
