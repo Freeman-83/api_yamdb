@@ -27,6 +27,7 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
+
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
         auto_now_add=True
