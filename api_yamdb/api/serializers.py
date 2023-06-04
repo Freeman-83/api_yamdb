@@ -12,10 +12,18 @@ class EmailSerializer(serializers.ModelSerializer):
         fields = ('username', 'email')
 
     def validate_username(self, value):
-        """Проверяет, что имя не 'me'."""
+        """Проверяет, что имя не 'me' и оно не занято."""
         if value == 'me':
             raise serializers.ValidationError("Имя 'me' запрещено")
+        if CustomUser.objects.filter(username=value).exists():
+            raise serializers.ValidationError(f"Имя {value} занято")
         return value
+
+    def validate_email(self, value):
+        """Проверяет, что указанный адрес почты не занят."""
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                "На этот адрес эл. почты уже зарегистрирован аккаунт.")
 
 
 class TokenSerializer(serializers.Serializer):
@@ -30,7 +38,7 @@ class TokenSerializer(serializers.Serializer):
         return value
 
 
-class AdminUserCreationSerializer(serializers.ModelSerializer):
+class AdminUserDetailSerializer(serializers.ModelSerializer):
     """Сериализатор для создания пользователя админом."""
     first_name = serializers.CharField(max_length=150, required=False)
     last_name = serializers.CharField(max_length=150, required=False)
@@ -51,7 +59,7 @@ class AdminUserCreationSerializer(serializers.ModelSerializer):
 
 
 class UserDetail(serializers.ModelSerializer):
-    """Сериализатор для создания пользователя админом."""
+    """Сериализатор для редактирования и просмотра профиля пользователя."""
     first_name = serializers.CharField(max_length=150, required=False)
     last_name = serializers.CharField(max_length=150, required=False)
     bio = serializers.CharField(required=False)

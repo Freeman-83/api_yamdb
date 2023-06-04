@@ -35,6 +35,10 @@ class CustomUser(AbstractUser):
             ),
         ]
 
+    def is_admin(self):
+        if self.is_staff is True:
+            self.role == "admin"
+
     def __str__(self):
         return self.username
 

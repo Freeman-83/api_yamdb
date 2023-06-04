@@ -1,17 +1,24 @@
 import string
 import random
 
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, filters
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 
 from reviews.models import ConfirmationCode, CustomUser
-from .serializers import EmailSerializer, TokenSerializer
+from .serializers import (
+    EmailSerializer,
+    TokenSerializer,
+    UserDetail,
+    AdminUserDetailSerializer
+)
 
 
 class MessegeSend(APIView):
@@ -53,3 +60,23 @@ def get_token(request):
         new_token = {'access': str(refresh.access_token)}
         return Response(new_token, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AdminUserDetail(viewsets.ModelViewSet):
+    """Вьюсет для отображения админом всех пользователей и создания нового."""
+    queryset = CustomUser.objects.all()
+    serializer_class = AdminUserDetailSerializer
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    permission_classes = (IsAdminUser,)
+    pagination_class = PageNumberPagination
+    search_fields = ('$username',)
+    lookup_field = 'username'
+
+
+class UserDetailViewSet(viewsets.ModelViewSet):
+    """Вьюсет для отображения и редактирования профиля пользователя."""
+    serializer_class = UserDetail
+    filter_backends = (DjangoFilterBackend,)
+
+    def get_queryset(self):
+        return get_object_or_404(CustomUser, username=self.request.user)
