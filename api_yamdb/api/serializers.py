@@ -4,7 +4,13 @@ from rest_framework import serializers, validators
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
-from reviews.models import Category, Genre, Title, Comment, Review, CustomUser, ConfirmationCode
+from reviews.models import (Category,
+                            Genre,
+                            Title,
+                            Comment,
+                            Review,
+                            CustomUser,
+                            ConfirmationCode)
 
 
 class CategorySerializer(serializers.ModelSerializer):

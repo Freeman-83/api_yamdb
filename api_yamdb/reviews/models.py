@@ -126,7 +126,7 @@ class Review(models.Model):
         'Оценка', validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     author = models.ForeignKey(
-        User,
+        CustomUser,
         verbose_name='Автор',
         on_delete=models.CASCADE,
         related_name='reviews'
@@ -156,7 +156,7 @@ class Comment(models.Model):
     )
     text = models.TextField('Текст')
     author = models.ForeignKey(
-        User,
+        CustomUser,
         verbose_name='Автор',
         on_delete=models.CASCADE,
         related_name='comments'
