@@ -50,7 +50,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'year', 'category', 'genre')
+    filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
 
 
 class MessegeSend(APIView):
