@@ -130,6 +130,7 @@ class EmailSerializer(serializers.ModelSerializer):
         if CustomUser.objects.filter(email=value).exists():
             raise serializers.ValidationError(
                 "На этот адрес эл. почты уже зарегистрирован аккаунт.")
+        return value
 
 
 class TokenSerializer(serializers.Serializer):

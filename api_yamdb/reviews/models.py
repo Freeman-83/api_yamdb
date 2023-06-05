@@ -15,7 +15,7 @@ class CustomUser(AbstractUser):
     ]
     email = models.EmailField(
         _('email address'),
-        blank=True,
+        # blank=True,
         unique=True,
         max_length=254
     )
@@ -37,8 +37,10 @@ class CustomUser(AbstractUser):
         ]
 
     def is_admin(self):
-        if self.is_staff is True:
-            self.role == "admin"
+        return self.is_staff or self.role == "admin"
+
+    def is_moderator(self):
+        return self.role == "moderator"
 
     def __str__(self):
         return self.username
