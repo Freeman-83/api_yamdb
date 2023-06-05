@@ -1,6 +1,13 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
-from .models import Category, Genre, Title, TitleGenre
+from .models import Category, Genre, Title, TitleGenre, CustomUser, ConfirmationCode
+
+
+class CustomUserAdmin(UserAdmin):
+    model = CustomUser
+    list_display = ('email', 'username',)
+    search_fields = ('username',)
 
 
 class TitleAdmin(admin.ModelAdmin):
@@ -14,3 +21,6 @@ admin.site.register(Category)
 admin.site.register(Genre)
 admin.site.register(Title, TitleAdmin)
 admin.site.register(TitleGenre)
+
+admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(ConfirmationCode)

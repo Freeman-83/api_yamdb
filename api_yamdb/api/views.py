@@ -1,14 +1,29 @@
-from rest_framework import filters, pagination, viewsets
+import string
+import random
+
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, pagination, status, viewsets
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
 
-from reviews.models import Category, Genre, Title, Review
+
+from reviews.models import Category, Genre, Title, Review, ConfirmationCode, CustomUser
 from .serializers import (CategorySerializer,
                           GenreSerializer,
                           TitleSerializer,
                           TitleCreateSerializer,
                           CommentSerializer,
-                          ReviewSerializer)
+                          ReviewSerializer,
+                          EmailSerializer,
+                          TokenSerializer,
+                          UserDetail,
+                          AdminUserDetailSerializer
+                          )
 from .permissions import AdminOrReadOnly, IsAdminModeratorOwnerOrReadOnly
 
 
@@ -37,36 +52,64 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'year', 'category', 'genre')
 
-    def get_serializer_class(self):
-        if self.action in ['create', 'partial_update']:
-            return TitleCreateSerializer
-        return TitleSerializer
+
+class MessegeSend(APIView):
+    """Вью-класс для отправки письма с кодом подтверждения."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = EmailSerializer(data=request.data)
+        if serializer.is_valid():
+            letters = string.ascii_lowercase
+            message = ConfirmationCode.objects.create(
+                confirmation_code=''.join(
+                    random.choice(letters) for i in range(10)
+                ),
+            )
+            send_mail(
+                'Код регистрации',
+                f'Ваш код для регистрации: {message.confirmation_code}',
+                'xxx@yandex.ru',
+                [f'{serializer.validated_data.get("email")}'],
+            )
+            CustomUser.objects.create(
+                username=serializer.validated_data.get("username"),
+                email=serializer.validated_data.get("email")
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
-    serializer_class = ReviewSerializer
-    permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
+@api_view(['POST'])
+@permission_classes([AllowAny, ])
+def get_token(request):
+    """Вью-функция для получения токена пользователем"""
+    serializer = TokenSerializer(data=request.data)
+    if serializer.is_valid():
+        username = serializer.validated_data.get("username")
+        user = get_object_or_404(CustomUser, username=username)
+        refresh = RefreshToken.for_user(user)
+        new_token = {'access': str(refresh.access_token)}
+        return Response(new_token, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AdminUserDetail(viewsets.ModelViewSet):
+    """Вьюсет для отображения админом всех пользователей и создания нового."""
+    queryset = CustomUser.objects.all()
+    serializer_class = AdminUserDetailSerializer
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    permission_classes = (IsAdminUser,)
+    pagination_class = pagination.PageNumberPagination
+    search_fields = ('$username',)
+    lookup_field = 'username'
+
+
+class UserDetailViewSet(viewsets.ModelViewSet):
+    """Вьюсет для отображения и редактирования профиля пользователя."""
+    serializer_class = UserDetail
+    filter_backends = (DjangoFilterBackend,)
 
     def get_queryset(self):
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        return title.reviews.all()
+        return get_object_or_404(CustomUser, username=self.request.user)
 
-    def perform_create(self, serializer):
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, title=title)
-
-
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
-    permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
-
-    def get_queryset(self):
-        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
-        return review.comments.select_related('author').all()
-
-    def perform_create(self, serializer):
-        review = get_object_or_404(
-            Review, id=self.kwargs.get('review_id'),
-            title=self.kwargs.get('title_id')
-        )
-        serializer.save(author=self.request.user, review=review)
