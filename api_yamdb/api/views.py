@@ -4,6 +4,7 @@ import random
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import filters, pagination, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -22,8 +23,7 @@ from .serializers import (CategorySerializer,
                           EmailSerializer,
                           TokenSerializer,
                           UserDetail,
-                          AdminUserDetailSerializer
-                          )
+                          AdminUserDetailSerializer)
 from .permissions import AdminOrReadOnly, IsAdminModeratorOwnerOrReadOnly
 
 
@@ -51,6 +51,40 @@ class TitleViewSet(viewsets.ModelViewSet):
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'partial_update']:
+            return TitleCreateSerializer
+        return TitleSerializer
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
+
+    def get_queryset(self):
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        return review.comments.select_related('author').all()
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(
+            Review, id=self.kwargs.get('review_id'),
+            title=self.kwargs.get('title_id')
+        )
+        serializer.save(author=self.request.user, review=review)
 
 
 class MessegeSend(APIView):
@@ -112,4 +146,3 @@ class UserDetailViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return get_object_or_404(CustomUser, username=self.request.user)
-
