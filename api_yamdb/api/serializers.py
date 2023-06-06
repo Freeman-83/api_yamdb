@@ -129,7 +129,8 @@ class EmailSerializer(serializers.ModelSerializer):
         """Проверяет, что указанный адрес почты не занят."""
         if CustomUser.objects.filter(email=value).exists():
             raise serializers.ValidationError(
-                "На этот адрес эл. почты уже зарегистрирован аккаунт.")
+                "На этот адрес эл. почты уже зарегистрирован аккаунт."
+            )
         return value
 
 
@@ -147,26 +148,27 @@ class TokenSerializer(serializers.Serializer):
 
 class AdminUserDetailSerializer(serializers.ModelSerializer):
     """Сериализатор для создания пользователя админом."""
+    username = serializers.SlugField(max_length=150, required=True)
+    email = serializers.EmailField(max_length=254, required=True)
     first_name = serializers.CharField(max_length=150, required=False)
     last_name = serializers.CharField(max_length=150, required=False)
     bio = serializers.CharField(required=False)
     role = serializers.ChoiceField(
         required=False,
         choices=CustomUser.ROLE_CHOICES,
-        default=CustomUser.USER)
+        default=CustomUser.USER,
+    )
 
     class Meta:
         model = CustomUser
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
-        validators = [serializers.UniqueTogetherValidator(
-            queryset=CustomUser.objects.all(),
-            fields=['username', 'email']
-        )]
 
 
 class UserDetail(serializers.ModelSerializer):
     """Сериализатор для редактирования и просмотра профиля пользователя."""
+    username = serializers.SlugField(max_length=150, required=True)
+    email = serializers.EmailField(max_length=254, required=True)
     first_name = serializers.CharField(max_length=150, required=False)
     last_name = serializers.CharField(max_length=150, required=False)
     bio = serializers.CharField(required=False)
@@ -174,8 +176,5 @@ class UserDetail(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('username', 'email', 'first_name',
-                  'last_name', 'bio')
-        validators = [serializers.UniqueTogetherValidator(
-            queryset=CustomUser.objects.all(),
-            fields=['username', 'email']
-        )]
+                  'last_name', 'bio', 'role')
+        read_only_fields = ('role',)

@@ -8,7 +8,7 @@ from .views import (CategoryViewSet,
                     CommentViewSet,
                     ReviewViewSet,
                     MessegeSend,
-                    AdminUserDetail)
+                    AdminUserDetailViewSet)
 
 app_name = 'api'
 
@@ -17,7 +17,7 @@ router_api_v1 = DefaultRouter()
 router_api_v1.register(r'categories', CategoryViewSet)
 router_api_v1.register(r'genres', GenreViewSet)
 router_api_v1.register(r'titles', TitleViewSet)
-router_api_v1.register('users', AdminUserDetail, basename='users')
+router_api_v1.register(r'users', AdminUserDetailViewSet, basename='users')
 router_api_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewViewSet,

@@ -5,19 +5,20 @@ from django.utils.translation import gettext_lazy as _
 
 
 class CustomUser(AbstractUser):
-    USER = "user"
-    MODERATOR = "moderator"
-    ADMIN = "admin"
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
     ROLE_CHOICES = [
-        (USER, "user"),
-        (MODERATOR, "moderator"),
-        (ADMIN, "admin"),
+        (USER, 'user'),
+        (MODERATOR, 'moderator'),
+        (ADMIN, 'admin'),
     ]
     email = models.EmailField(
         _('email address'),
         # blank=True,
         unique=True,
-        max_length=254
+        max_length=254,
+        null=False
     )
     bio = models.TextField()
     role = models.CharField(
@@ -48,6 +49,9 @@ class CustomUser(AbstractUser):
 
 class ConfirmationCode(models.Model):
     confirmation_code = models.CharField(max_length=256, unique=True)
+
+    def __str__(self):
+        return self.confirmation_code
 
 
 class Category(models.Model):

@@ -6,13 +6,18 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import filters, pagination, status, viewsets
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 
-from reviews.models import Category, Genre, Title, Review, ConfirmationCode, CustomUser
+from reviews.models import (Category,
+                            Genre,
+                            Title,
+                            Review,
+                            ConfirmationCode,
+                            CustomUser)
 from .serializers import (CategorySerializer,
                           GenreSerializer,
                           TitleSerializer,
@@ -23,22 +28,32 @@ from .serializers import (CategorySerializer,
                           TokenSerializer,
                           UserDetail,
                           AdminUserDetailSerializer)
-from .permissions import AdminOrReadOnly, IsAdminModeratorOwnerOrReadOnly
+from .permissions import (IsAdminOnly,
+                          IsAdminOrReadOnly,
+                          IsAdminModeratorOwnerOrReadOnly)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+
+    # def destroy(self, request, *args, **kwargs):
+    #     category = get_object_or_404(Category, slug=self.kwargs['slug'])
+    #     self.perform_destroy(category)
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
+    #
+    # def perform_destroy(self, category):
+    #     category.delete()
 
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -46,7 +61,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.select_related('category').all()
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
@@ -94,9 +109,13 @@ class MessegeSend(APIView):
         serializer = EmailSerializer(data=request.data)
         if serializer.is_valid():
             letters = string.ascii_lowercase
+            CustomUser.objects.create(
+                username=serializer.validated_data.get("username"),
+                email=serializer.validated_data.get("email")
+            )
             message = ConfirmationCode.objects.create(
                 confirmation_code=''.join(
-                    random.choice(letters) for i in range(10)
+                    random.choice(letters) for _ in range(5)
                 ),
             )
             send_mail(
@@ -104,10 +123,6 @@ class MessegeSend(APIView):
                 f'Ваш код для регистрации: {message.confirmation_code}',
                 'xxx@yandex.ru',
                 [f'{serializer.validated_data.get("email")}'],
-            )
-            CustomUser.objects.create(
-                username=serializer.validated_data.get("username"),
-                email=serializer.validated_data.get("email")
             )
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -127,21 +142,29 @@ def get_token(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AdminUserDetail(viewsets.ModelViewSet):
+class AdminUserDetailViewSet(viewsets.ModelViewSet):
     """Вьюсет для отображения админом всех пользователей и создания нового."""
     queryset = CustomUser.objects.all()
     serializer_class = AdminUserDetailSerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAdminOnly,)
     pagination_class = pagination.PageNumberPagination
     search_fields = ('$username',)
     lookup_field = 'username'
+    http_method_names = ('get', 'post', 'delete', 'patch')
 
-
-class UserDetailViewSet(viewsets.ModelViewSet):
-    """Вьюсет для отображения и редактирования профиля пользователя."""
-    serializer_class = UserDetail
-    filter_backends = (DjangoFilterBackend,)
-
-    def get_queryset(self):
-        return get_object_or_404(CustomUser, username=self.request.user)
+    @action(methods=['GET', 'PATCH'], detail=False, url_path='me',
+            permission_classes=(IsAuthenticated,))
+    def profile(self, request):
+        serializer = UserDetail(request.user)
+        if request.method == 'PATCH':
+            serializer = UserDetail(
+                request.user,
+                data=request.data,
+                partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_200_OK)
