@@ -41,14 +41,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
-    # def destroy(self, request, *args, **kwargs):
-    #     category = get_object_or_404(Category, slug=self.kwargs['slug'])
-    #     self.perform_destroy(category)
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
-    #
-    # def perform_destroy(self, category):
-    #     category.delete()
-
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
