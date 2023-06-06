@@ -5,7 +5,7 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import filters, pagination, status, viewsets
+from rest_framework import filters, pagination, status, viewsets, mixins
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -18,6 +18,7 @@ from reviews.models import (Category,
                             Review,
                             ConfirmationCode,
                             CustomUser)
+
 from .serializers import (CategorySerializer,
                           GenreSerializer,
                           TitleSerializer,
@@ -28,12 +29,22 @@ from .serializers import (CategorySerializer,
                           TokenSerializer,
                           UserDetail,
                           AdminUserDetailSerializer)
+
 from .permissions import (IsAdminOnly,
                           IsAdminOrReadOnly,
                           IsAdminModeratorOwnerOrReadOnly)
 
+from .filters import TitleFilterSet
 
-class CategoryViewSet(viewsets.ModelViewSet):
+
+class CreateDeleteListViewSet(mixins.CreateModelMixin,
+                              mixins.DestroyModelMixin,
+                              mixins.ListModelMixin,
+                              viewsets.GenericViewSet):
+    pass
+
+
+class CategoryViewSet(CreateDeleteListViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -41,8 +52,16 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
+    def destroy(self, request, *args, **kwargs):
+        category = get_object_or_404(Category, slug=kwargs['pk'])
+        self.perform_destroy(category)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-class GenreViewSet(viewsets.ModelViewSet):
+    def perform_destroy(self, category):
+        category.delete()
+
+
+class GenreViewSet(CreateDeleteListViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -50,13 +69,21 @@ class GenreViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
+    def destroy(self, request, *args, **kwargs):
+        genre = get_object_or_404(Genre, slug=kwargs['pk'])
+        self.perform_destroy(genre)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, category):
+        category.delete()
+
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.select_related('category').all()
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
+    filterset_class = TitleFilterSet
 
     def get_serializer_class(self):
         if self.action in ['create', 'partial_update']:
@@ -99,25 +126,25 @@ class MessegeSend(APIView):
 
     def post(self, request):
         serializer = EmailSerializer(data=request.data)
-        if serializer.is_valid():
-            letters = string.ascii_lowercase
-            CustomUser.objects.create(
-                username=serializer.validated_data.get("username"),
-                email=serializer.validated_data.get("email")
-            )
-            message = ConfirmationCode.objects.create(
-                confirmation_code=''.join(
-                    random.choice(letters) for _ in range(5)
-                ),
-            )
-            send_mail(
-                'Код регистрации',
-                f'Ваш код для регистрации: {message.confirmation_code}',
-                'xxx@yandex.ru',
-                [f'{serializer.validated_data.get("email")}'],
-            )
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        letters = string.ascii_lowercase
+        CustomUser.objects.get_or_create(
+            username=serializer.validated_data.get("username"),
+            email=serializer.validated_data.get("email")
+        )
+        message = ConfirmationCode.objects.create(
+            confirmation_code=''.join(
+                random.choice(letters) for _ in range(5)
+            ),
+        )
+        send_mail(
+            'Код регистрации',
+            f'Ваш код для регистрации: {message.confirmation_code}',
+            'xxx@yandex.ru',
+            [f'{serializer.validated_data.get("email")}'],
+        )
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
