@@ -1,7 +1,8 @@
-import string
-import random
+from random import randint
 
 from django.core.mail import send_mail
+from django.db import IntegrityError
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -16,9 +17,7 @@ from reviews.models import (Category,
                             Genre,
                             Title,
                             Review,
-                            ConfirmationCode,
                             CustomUser)
-
 from .serializers import (CategorySerializer,
                           GenreSerializer,
                           TitleSerializer,
@@ -83,7 +82,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_class = TitleFilterSet
+    filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
 
     def get_serializer_class(self):
         if self.action in ['create', 'partial_update']:
@@ -127,23 +126,26 @@ class MessegeSend(APIView):
     def post(self, request):
         serializer = EmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        letters = string.ascii_lowercase
-        CustomUser.objects.get_or_create(
-            username=serializer.validated_data.get("username"),
-            email=serializer.validated_data.get("email")
-        )
-        message = ConfirmationCode.objects.create(
-            confirmation_code=''.join(
-                random.choice(letters) for _ in range(5)
-            ),
-        )
+        username = serializer.data['username']
+        email = serializer.data['email']
+        confirmation_code = randint(10000, 99999)
+        try:
+            user, _ = CustomUser.objects.get_or_create(
+                username=username,
+                email=email,
+                confirmation_code=confirmation_code
+            )
+        except IntegrityError:
+            return Response(
+                'Пользователь с указанными данными уже существует.',
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         send_mail(
-            'Код регистрации',
-            f'Ваш код для регистрации: {message.confirmation_code}',
-            'xxx@yandex.ru',
-            [f'{serializer.validated_data.get("email")}'],
+            subject='Код регистрации',
+            message=f'Ваш код для регистрации: {confirmation_code}',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[email],
         )
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -152,13 +154,16 @@ class MessegeSend(APIView):
 def get_token(request):
     """Вью-функция для получения токена пользователем"""
     serializer = TokenSerializer(data=request.data)
-    if serializer.is_valid():
-        username = serializer.validated_data.get("username")
-        user = get_object_or_404(CustomUser, username=username)
+    if serializer.is_valid(raise_exception=True):
+        user = get_object_or_404(
+            CustomUser,
+            username=serializer.data.get("username"))
+    if serializer.data['confirmation_code'] == user.confirmation_code:
         refresh = RefreshToken.for_user(user)
         new_token = {'access': str(refresh.access_token)}
-        return Response(new_token, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(new_token, status=status.HTTP_201_CREATED)
+    return Response('Неверный код подтверждения confirmation_code.',
+                    status=status.HTTP_400_BAD_REQUEST)
 
 
 class AdminUserDetailViewSet(viewsets.ModelViewSet):

@@ -1,4 +1,6 @@
 import datetime as dt
+import re
+
 from django.db.models import Avg
 from rest_framework import serializers, validators
 from rest_framework.exceptions import ValidationError
@@ -9,8 +11,7 @@ from reviews.models import (Category,
                             Title,
                             Comment,
                             Review,
-                            CustomUser,
-                            ConfirmationCode)
+                            CustomUser)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -108,42 +109,41 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'pub_date')
 
 
-class EmailSerializer(serializers.ModelSerializer):
+class EmailSerializer(serializers.Serializer):
     """Сериализатор для отправки кода через email."""
-    username = serializers.SlugField(max_length=150, required=True)
+    username = serializers.CharField(max_length=150, required=True)
     email = serializers.EmailField(max_length=254, required=True)
+
+    def validate_username(self, data):
+        username = data
+        email = self.initial_data.get('email')
+        if username == 'me':
+            raise serializers.ValidationError("Имя 'me' запрещено")
+        if not re.match(r'^[\w.@+-]+$', username):
+            raise serializers.ValidationError(
+                'Некорректный формат введенного логина.'
+            )
+        if CustomUser.objects.filter(
+            username=username) and not CustomUser.objects.filter(
+                email=email):
+            raise serializers.ValidationError(
+                "Пользователь зарегистрирован с другой почтой")
+        if CustomUser.objects.filter(
+            email=email) and not CustomUser.objects.filter(
+                username=username):
+            raise serializers.ValidationError(
+                "Пользователь зарегистрирован с другим логином.")
+        return data
+
+
+class TokenSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения токена."""
+    username = serializers.SlugField(max_length=150, required=True)
+    confirmation_code = serializers.IntegerField(required=True)
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email')
-
-    def validate_username(self, value):
-        """Проверяет, что имя не 'me' и оно не занято."""
-        if value == 'me':
-            raise serializers.ValidationError("Имя 'me' запрещено")
-        if CustomUser.objects.filter(username=value).exists():
-            raise serializers.ValidationError(f"Имя {value} занято")
-        return value
-
-    def validate_email(self, value):
-        """Проверяет, что указанный адрес почты не занят."""
-        if CustomUser.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                "На этот адрес эл. почты уже зарегистрирован аккаунт."
-            )
-        return value
-
-
-class TokenSerializer(serializers.Serializer):
-    """Сериализатор для получения токена."""
-    username = serializers.SlugField(max_length=150, required=True)
-    confirmation_code = serializers.CharField(required=True)
-
-    def validate_confirmation_code(self, value):
-        """Проверяет, что код соответствует отправленному."""
-        if value != ConfirmationCode.objects.last().confirmation_code:
-            raise serializers.ValidationError("Неправильный код")
-        return value
+        fields = ('username', 'confirmation_code')
 
 
 class AdminUserDetailSerializer(serializers.ModelSerializer):
@@ -163,6 +163,22 @@ class AdminUserDetailSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
+
+    def validate_username(self, value):
+        """Проверяет, что имя не 'me' и оно не занято."""
+        if value == 'me':
+            raise serializers.ValidationError("Имя 'me' запрещено")
+        if CustomUser.objects.filter(username=value).exists():
+            raise serializers.ValidationError(f"Имя {value} занято")
+        return value
+
+    def validate_email(self, value):
+        """Проверяет, что указанный адрес почты не занят."""
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                "На этот ажрес эл. почты уже зарегистрирован аккаунт."
+            )
+        return value
 
 
 class UserDetail(serializers.ModelSerializer):

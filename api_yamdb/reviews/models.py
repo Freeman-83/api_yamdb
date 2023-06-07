@@ -15,9 +15,8 @@ class CustomUser(AbstractUser):
     ]
     email = models.EmailField(
         _('email address'),
-        # blank=True,
-        unique=True,
         max_length=254,
+        unique=True,
         null=False
     )
     bio = models.TextField()
@@ -26,6 +25,9 @@ class CustomUser(AbstractUser):
         choices=ROLE_CHOICES,
         default=USER
     )
+
+    confirmation_code = models.IntegerField(default=00000)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
@@ -45,13 +47,6 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
-
-
-class ConfirmationCode(models.Model):
-    confirmation_code = models.CharField(max_length=256, unique=True)
-
-    def __str__(self):
-        return self.confirmation_code
 
 
 class Category(models.Model):
