@@ -106,8 +106,7 @@ class MessegeSend(APIView):
         try:
             user, _ = CustomUser.objects.get_or_create(
                 username=username,
-                email=email,
-                confirmation_code=confirmation_code
+                email=email
             )
         except IntegrityError:
             return Response(
