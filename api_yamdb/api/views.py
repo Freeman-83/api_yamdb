@@ -18,6 +18,7 @@ from reviews.models import (Category,
                             Title,
                             Review,
                             CustomUser)
+
 from .serializers import (CategorySerializer,
                           GenreSerializer,
                           TitleSerializer,
@@ -82,7 +83,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
+    filterset_class = TitleFilterSet
 
     def get_serializer_class(self):
         if self.action in ['create', 'partial_update']:
@@ -119,7 +120,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
-class MessegeSend(APIView):
+class MessageSend(APIView):
     """Вью-класс для отправки письма с кодом подтверждения."""
     permission_classes = [AllowAny]
 
@@ -145,6 +146,7 @@ class MessegeSend(APIView):
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[email],
         )
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

@@ -7,7 +7,7 @@ from .views import (CategoryViewSet,
                     CommentViewSet,
                     ReviewViewSet,
                     AdminUserDetailViewSet,
-                    MessegeSend,
+                    MessageSend,
                     get_token)
 
 app_name = 'api'
@@ -30,7 +30,7 @@ router_api_v1.register(
 )
 
 urlpatterns = [
-    path('v1/auth/signup/', MessegeSend.as_view()),
+    path('v1/auth/signup/', MessageSend.as_view()),
     path('v1/auth/token/', get_token),
     path('v1/', include(router_api_v1.urls)),
 ]
