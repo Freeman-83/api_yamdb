@@ -26,7 +26,7 @@ class CustomUser(AbstractUser):
         default=USER
     )
 
-    confirmation_code = models.IntegerField(default=00000)
+    confirmation_code = models.IntegerField(default=11111)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
