@@ -1,8 +1,52 @@
-from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
 
-User = get_user_model()
+
+class CustomUser(AbstractUser):
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
+    ROLE_CHOICES = [
+        (USER, 'user'),
+        (MODERATOR, 'moderator'),
+        (ADMIN, 'admin'),
+    ]
+    email = models.EmailField(
+        _('email address'),
+        max_length=254,
+        unique=True,
+        null=False
+    )
+    bio = models.TextField()
+    role = models.CharField(
+        max_length=9,
+        choices=ROLE_CHOICES,
+        default=USER
+    )
+
+    confirmation_code = models.IntegerField(default=11111)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['username', 'email'],
+                name='unique_user'
+            ),
+        ]
+
+    def is_admin(self):
+        return self.is_staff or self.role == "admin"
+
+    def is_moderator(self):
+        return self.role == "moderator"
+
+    def __str__(self):
+        return self.username
 
 
 class Category(models.Model):
@@ -83,7 +127,7 @@ class Review(models.Model):
         'Оценка', validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     author = models.ForeignKey(
-        User,
+        CustomUser,
         verbose_name='Автор',
         on_delete=models.CASCADE,
         related_name='reviews'
@@ -113,7 +157,7 @@ class Comment(models.Model):
     )
     text = models.TextField('Текст')
     author = models.ForeignKey(
-        User,
+        CustomUser,
         verbose_name='Автор',
         on_delete=models.CASCADE,
         related_name='comments'
