@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
 from .models import (Category,
                      Genre,
@@ -8,10 +7,13 @@ from .models import (Category,
                      CustomUser)
 
 
-class CustomUserAdmin(UserAdmin):
-    model = CustomUser
-    list_display = ('email', 'username',)
+class CustomUserAdmin(admin.ModelAdmin):
+    list_display = ('email', 'username', 'confirmation_code', 'first_name',
+                    'last_name', 'role', 'bio', 'password',)
     search_fields = ('username',)
+    list_filter = ('username',)
+    list_editable = ('role',)
+    empty_value_display = '-пусто-'
 
 
 class TitleAdmin(admin.ModelAdmin):

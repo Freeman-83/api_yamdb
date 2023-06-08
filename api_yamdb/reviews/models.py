@@ -25,7 +25,6 @@ class CustomUser(AbstractUser):
         choices=ROLE_CHOICES,
         default=USER
     )
-
     confirmation_code = models.IntegerField(default=10001)
 
     USERNAME_FIELD = 'email'

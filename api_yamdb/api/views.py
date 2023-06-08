@@ -139,6 +139,8 @@ class MessageSend(APIView):
                 username=username,
                 email=email
             )
+            user.confirmation_code = confirmation_code
+            user.save()
         except IntegrityError:
             return Response(
                 'Пользователь с указанными данными уже существует.',
