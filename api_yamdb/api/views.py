@@ -50,7 +50,7 @@ class CategoryViewSet(CreateDeleteListViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('=name',)
+    search_fields = ('name',)
 
     def destroy(self, request, *args, **kwargs):
         category = get_object_or_404(Category, slug=kwargs['pk'])
@@ -152,14 +152,13 @@ class MessageSend(APIView):
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[email],
         )
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def get_token(request):
-    """Вью-функция для получения токена пользователем"""
+    """Вью-функция для получения токена пользователем."""
     serializer = TokenSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
         user = get_object_or_404(

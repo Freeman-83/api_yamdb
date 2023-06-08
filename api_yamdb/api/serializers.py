@@ -182,7 +182,7 @@ class AdminUserDetailSerializer(serializers.ModelSerializer):
         """Проверяет, что указанный адрес почты не занят."""
         if CustomUser.objects.filter(email=value).exists():
             raise serializers.ValidationError(
-                "На этот ажрес эл. почты уже зарегистрирован аккаунт."
+                "На этот адрес эл. почты уже зарегистрирован аккаунт."
             )
         return value
 

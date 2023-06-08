@@ -19,8 +19,9 @@ class CustomUser(AbstractUser):
         unique=True,
         null=False
     )
-    bio = models.TextField()
+    bio = models.TextField('Биография')
     role = models.CharField(
+        'Статус',
         max_length=9,
         choices=ROLE_CHOICES,
         default=USER
