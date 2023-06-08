@@ -1,48 +1,68 @@
-from random import randint
-
+from django.conf import settings
 from django.core.mail import send_mail
 from django.db import IntegrityError
-from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import filters, pagination, status, viewsets
+from random import randint
+from rest_framework import filters, pagination, status, viewsets, mixins
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 
-from reviews.models import (Category,
+from reviews.models import (CustomUser,
+                            Category,
                             Genre,
-                            Title,
                             Review,
-                            CustomUser)
-from .serializers import (CategorySerializer,
+                            Title)
+
+from .serializers import (AdminUserDetailSerializer,
+                          CategorySerializer,
+                          CommentSerializer,
+                          EmailSerializer,
                           GenreSerializer,
+                          ReviewSerializer,
                           TitleSerializer,
                           TitleCreateSerializer,
-                          CommentSerializer,
-                          ReviewSerializer,
-                          EmailSerializer,
                           TokenSerializer,
-                          UserDetail,
-                          AdminUserDetailSerializer)
+                          UserDetailSerializer)
+
 from .permissions import (IsAdminOnly,
                           IsAdminOrReadOnly,
                           IsAdminModeratorOwnerOrReadOnly)
 
+from .filters import TitleFilterSet
 
-class CategoryViewSet(viewsets.ModelViewSet):
+
+class CreateDeleteListViewSet(mixins.CreateModelMixin,
+                              mixins.DestroyModelMixin,
+                              mixins.ListModelMixin,
+                              viewsets.GenericViewSet):
+    pass
+
+
+class CategoryViewSet(CreateDeleteListViewSet):
+    """Вьюсет для категорий"""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
+    search_fields = ('=name',)
+
+    def destroy(self, request, *args, **kwargs):
+        category = get_object_or_404(Category, slug=kwargs['pk'])
+        self.perform_destroy(category)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, category):
+        category.delete()
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(CreateDeleteListViewSet):
+    """Вьюсет для жанров"""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -50,13 +70,22 @@ class GenreViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
+    def destroy(self, request, *args, **kwargs):
+        genre = get_object_or_404(Genre, slug=kwargs['pk'])
+        self.perform_destroy(genre)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, category):
+        category.delete()
+
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для произведений"""
     queryset = Title.objects.select_related('category').all()
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
+    filterset_class = TitleFilterSet
 
     def get_serializer_class(self):
         if self.action in ['create', 'partial_update']:
@@ -65,6 +94,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Вьюсет для отзывов к произведениям"""
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
 
@@ -78,6 +108,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Вьюсет для комментариев к отзывам"""
     serializer_class = CommentSerializer
     permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
 
@@ -93,7 +124,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
-class MessegeSend(APIView):
+class MessageSend(APIView):
     """Вью-класс для отправки письма с кодом подтверждения."""
     permission_classes = [AllowAny]
 
@@ -121,18 +152,19 @@ class MessegeSend(APIView):
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[email],
         )
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny, ])
+@permission_classes([AllowAny])
 def get_token(request):
     """Вью-функция для получения токена пользователем"""
     serializer = TokenSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
         user = get_object_or_404(
             CustomUser,
-            username=serializer.data.get("username"))
+            username=serializer.data.get('username'))
     if serializer.data['confirmation_code'] == user.confirmation_code:
         refresh = RefreshToken.for_user(user)
         new_token = {'access': str(refresh.access_token)}
@@ -155,9 +187,9 @@ class AdminUserDetailViewSet(viewsets.ModelViewSet):
     @action(methods=['GET', 'PATCH'], detail=False, url_path='me',
             permission_classes=(IsAuthenticated,))
     def profile(self, request):
-        serializer = UserDetail(request.user)
+        serializer = UserDetailSerializer(request.user)
         if request.method == 'PATCH':
-            serializer = UserDetail(
+            serializer = UserDetailSerializer(
                 request.user,
                 data=request.data,
                 partial=True)

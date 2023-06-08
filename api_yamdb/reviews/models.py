@@ -1,6 +1,6 @@
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
 
@@ -25,13 +25,13 @@ class CustomUser(AbstractUser):
         choices=ROLE_CHOICES,
         default=USER
     )
-
-    confirmation_code = models.IntegerField(default=11111)
+    confirmation_code = models.IntegerField(default=10001)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
     class Meta:
+        ordering = ['role']
         constraints = [
             models.UniqueConstraint(
                 fields=['username', 'email'],
@@ -138,6 +138,7 @@ class Review(models.Model):
     )
 
     class Meta:
+        ordering = ['pub_date']
         verbose_name = 'Отзыв',
         verbose_name_plural = 'Отзывы',
         constraints = [
@@ -167,5 +168,6 @@ class Comment(models.Model):
     )
 
     class Meta:
+        ordering = ['pub_date']
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'

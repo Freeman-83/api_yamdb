@@ -1,6 +1,10 @@
 from django.contrib import admin
 
-from .models import Category, Genre, Title, TitleGenre, CustomUser
+from .models import (Category,
+                     Genre,
+                     Title,
+                     TitleGenre,
+                     CustomUser)
 
 
 class CustomUserAdmin(admin.ModelAdmin):
@@ -23,5 +27,4 @@ admin.site.register(Category)
 admin.site.register(Genre)
 admin.site.register(Title, TitleAdmin)
 admin.site.register(TitleGenre)
-
 admin.site.register(CustomUser, CustomUserAdmin)
