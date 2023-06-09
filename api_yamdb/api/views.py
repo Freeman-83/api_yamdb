@@ -45,7 +45,7 @@ class CreateDeleteListViewSet(mixins.CreateModelMixin,
 
 
 class CategoryViewSet(CreateDeleteListViewSet):
-    """Вьюсет для категорий"""
+    """Вьюсет для категорий."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -63,7 +63,7 @@ class CategoryViewSet(CreateDeleteListViewSet):
 
 
 class GenreViewSet(CreateDeleteListViewSet):
-    """Вьюсет для жанров"""
+    """Вьюсет для жанров."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -81,12 +81,14 @@ class GenreViewSet(CreateDeleteListViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    """Вьюсет для произведений"""
+    """Вьюсет для произведений."""
     queryset = Title.objects.select_related(
         'category'
     ).prefetch_related(
         'genre'
-    ).annotate(rating=Avg('reviews__score'))
+    ).annotate(
+        rating=Avg('reviews__score')
+    ).order_by('name')
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)

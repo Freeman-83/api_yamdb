@@ -41,10 +41,6 @@ class TitleSerializer(serializers.ModelSerializer):
             'id', 'name', 'year', 'rating', 'description', 'category', 'genre'
         )
 
-    def get_rating(self, obj):
-        rating = obj.reviews.aggregate(Avg('score'))
-        return rating['score__avg']
-
 
 class TitleCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания произведений"""
