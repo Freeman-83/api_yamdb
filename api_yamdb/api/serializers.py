@@ -49,6 +49,12 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         slug_field='slug',
         required=True
     )
+    # Не нашли других вариантов для поля category
+    # (в т.ч. чтобы устраивало пайтест).
+    # По redoc в сериализатор нужно передать именно слаг категории,
+    # причем поле должно быть доступно на запись.
+    # Буду благодарен, если подскажешь, как еще это можно сделать
+
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
