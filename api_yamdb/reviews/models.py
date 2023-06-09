@@ -51,6 +51,7 @@ class CustomUser(AbstractUser):
 
 
 class Category(models.Model):
+    """Модель категорий произведений."""
     name = models.CharField('Категория', unique=True, max_length=256)
     slug = models.SlugField('URL_category', unique=True, max_length=50)
 
@@ -64,6 +65,7 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
+    """Модель жанров произведений."""
     name = models.CharField('Жанр', unique=True, max_length=256)
     slug = models.SlugField('URL_genre', unique=True, max_length=50)
 
@@ -77,8 +79,9 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
+    """Модель произведений."""
     name = models.CharField('Наименование произведения', max_length=256)
-    year = models.IntegerField('Дата выхода')
+    year = models.IntegerField('Дата выхода', db_index=True)
     description = models.TextField('Описание', null=True, blank=True)
     category = models.ForeignKey(
         Category,
@@ -88,7 +91,9 @@ class Title(models.Model):
         blank=True
     )
     genre = models.ManyToManyField(
-        Genre, through='TitleGenre'
+        Genre,
+        through='TitleGenre',
+        related_name='titles'
     )
 
     class Meta:
@@ -101,6 +106,7 @@ class Title(models.Model):
 
 
 class TitleGenre(models.Model):
+    """Модель отношений прозведение-жанр"""
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 

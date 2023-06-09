@@ -4,6 +4,7 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
+from django.db.models import Avg
 from random import randint
 from rest_framework import filters, pagination, status, viewsets, mixins
 from rest_framework.decorators import api_view, permission_classes, action
@@ -81,7 +82,11 @@ class GenreViewSet(CreateDeleteListViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений"""
-    queryset = Title.objects.select_related('category').all()
+    queryset = Title.objects.select_related(
+        'category'
+    ).prefetch_related(
+        'genre'
+    ).annotate(rating=Avg('reviews__score'))
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)

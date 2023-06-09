@@ -1,7 +1,6 @@
 import datetime as dt
 import re
 
-from django.db.models import Avg
 from rest_framework import serializers, validators
 from rest_framework.generics import get_object_or_404
 from rest_framework.exceptions import ValidationError
@@ -32,7 +31,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений"""
-    rating = serializers.SerializerMethodField(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
 
