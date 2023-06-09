@@ -4,6 +4,7 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
+from django.db.models import Avg
 from random import randint
 from rest_framework import filters, pagination, status, viewsets, mixins
 from rest_framework.decorators import api_view, permission_classes, action
@@ -44,7 +45,7 @@ class CreateDeleteListViewSet(mixins.CreateModelMixin,
 
 
 class CategoryViewSet(CreateDeleteListViewSet):
-    """Вьюсет для категорий"""
+    """Вьюсет для категорий."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -62,7 +63,7 @@ class CategoryViewSet(CreateDeleteListViewSet):
 
 
 class GenreViewSet(CreateDeleteListViewSet):
-    """Вьюсет для жанров"""
+    """Вьюсет для жанров."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -80,8 +81,14 @@ class GenreViewSet(CreateDeleteListViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    """Вьюсет для произведений"""
-    queryset = Title.objects.select_related('category').all()
+    """Вьюсет для произведений."""
+    queryset = Title.objects.select_related(
+        'category'
+    ).prefetch_related(
+        'genre'
+    ).annotate(
+        rating=Avg('reviews__score')
+    ).order_by('name')
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
@@ -94,7 +101,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """Вьюсет для отзывов к произведениям"""
+    """Вьюсет для отзывов к произведениям."""
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
 
@@ -108,7 +115,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """Вьюсет для комментариев к отзывам"""
+    """Вьюсет для комментариев к отзывам."""
     serializer_class = CommentSerializer
     permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
 

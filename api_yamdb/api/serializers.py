@@ -1,7 +1,6 @@
 import datetime as dt
 import re
 
-from django.db.models import Avg
 from rest_framework import serializers, validators
 from rest_framework.generics import get_object_or_404
 from rest_framework.exceptions import ValidationError
@@ -32,7 +31,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений"""
-    rating = serializers.SerializerMethodField(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
 
@@ -42,10 +41,6 @@ class TitleSerializer(serializers.ModelSerializer):
             'id', 'name', 'year', 'rating', 'description', 'category', 'genre'
         )
 
-    def get_rating(self, obj):
-        rating = obj.reviews.aggregate(Avg('score'))
-        return rating['score__avg']
-
 
 class TitleCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания произведений"""
@@ -54,6 +49,12 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         slug_field='slug',
         required=True
     )
+    # Не нашли других вариантов для поля category
+    # (в т.ч. чтобы устраивало пайтест).
+    # По redoc в сериализатор нужно передать именно слаг категории,
+    # причем поле должно быть доступно на запись.
+    # Буду благодарен, если подскажешь, как еще это можно сделать
+
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
