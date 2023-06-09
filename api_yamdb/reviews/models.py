@@ -117,6 +117,7 @@ class TitleGenre(models.Model):
 
 
 class Review(models.Model):
+    """Отзывы на произведения. Отзыв привязан к определённому произведению."""
     title = models.ForeignKey(
         Title,
         verbose_name='Произведение',
@@ -135,7 +136,7 @@ class Review(models.Model):
     )
 
     pub_date = models.DateTimeField(
-        'Дата публикации', auto_now_add=True
+        'Дата публикации', auto_now_add=True, db_index=True
     )
 
     class Meta:
@@ -151,6 +152,7 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    """Комментарии к отзывам. Комментарий привязан к определённому отзыву"""
     review = models.ForeignKey(
         Review,
         verbose_name='Отзыв',
@@ -165,7 +167,7 @@ class Comment(models.Model):
         related_name='comments'
     )
     pub_date = models.DateTimeField(
-        'Дата публикации', auto_now_add=True
+        'Дата публикации', auto_now_add=True, db_index=True
     )
 
     class Meta:
