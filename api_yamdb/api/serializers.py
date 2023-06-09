@@ -14,7 +14,7 @@ from reviews.models import (CustomUser,
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор для категорий"""
+    """Сериализатор для категорий."""
 
     class Meta:
         model = Category
@@ -22,7 +22,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Сериализатор для жанров"""
+    """Сериализатор для жанров."""
 
     class Meta:
         model = Genre
@@ -30,7 +30,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    """Сериализатор для произведений"""
+    """Сериализатор для произведений."""
     rating = serializers.IntegerField(read_only=True)
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
@@ -43,7 +43,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания произведений"""
+    """Сериализатор для создания произведений."""
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
         slug_field='slug',
@@ -82,7 +82,7 @@ class TitleCreateSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """Сериализатор для отзывов"""
+    """Сериализатор для отзывов к произведениям."""
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
         slug_field='username',
@@ -106,7 +106,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор для комментариев"""
+    """Сериализатор для комментариев к отзывам."""
     author = serializers.SlugRelatedField(
         slug_field='username', read_only=True
     )
@@ -117,7 +117,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserRegistrationSerializer(serializers.Serializer):
-    """Сериализатор для отправки кода через email."""
+    """Сериализатор для создания пользователя."""
     username = serializers.CharField(max_length=150, required=True)
     email = serializers.EmailField(max_length=254, required=True)
 
@@ -136,7 +136,8 @@ class UserRegistrationSerializer(serializers.Serializer):
                 email=email) and not CustomUser.objects.filter(
                 username=username)):
             raise serializers.ValidationError(
-                "Пользователь зарегистрирован с другими данными.")
+                "Пользователь зарегистрирован с другими данными."
+            )
         return data
 
 

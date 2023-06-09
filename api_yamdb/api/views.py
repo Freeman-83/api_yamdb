@@ -132,7 +132,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class UserRegistration(APIView):
-    """Вью-класс для отправки письма с кодом подтверждения."""
+    """Вью-класс для создания пользователя."""
     permission_classes = [AllowAny]
 
     def post(self, request):
