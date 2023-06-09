@@ -40,3 +40,33 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 ```
+
+## Примеры запросов
+- POST - запрос на получение токена пользователя:
+http://127.0.0.1:8000/api/v1/auth/token/
+Данные входящего запроса:
+``` 
+{
+  "username": "string",
+  "confirmation_code": "string"
+}
+```
+Ответ получения токена:
+``` 
+{
+  "token": "string"
+}
+```
+- GET - запрос на получение комментария к произведению:
+http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/comments/{comment_id}/
+
+``` 
+{
+  "id": 0,
+  "text": "string",
+  "author": "string",
+  "pub_date": "2019-08-24T14:15:22Z"
+}
+```
+# *Авторы*:
+Марин Михаил, Хорольская Екатерина, Кошурин Артём

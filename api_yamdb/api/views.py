@@ -1,11 +1,10 @@
 from django.conf import settings
 from django.core.mail import send_mail
-from django.db import IntegrityError
+from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
 from django.db.models import Avg
-from random import randint
 from rest_framework import filters, pagination, status, viewsets, mixins
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -132,7 +131,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
-class MessageSend(APIView):
+class UserRegistration(APIView):
     """Вью-класс для отправки письма с кодом подтверждения."""
     permission_classes = [AllowAny]
 
@@ -141,19 +140,13 @@ class MessageSend(APIView):
         serializer.is_valid(raise_exception=True)
         username = serializer.data['username']
         email = serializer.data['email']
-        confirmation_code = randint(10000, 99999)
-        try:
-            user, _ = CustomUser.objects.get_or_create(
-                username=username,
-                email=email
-            )
-            user.confirmation_code = confirmation_code
-            user.save()
-        except IntegrityError:
-            return Response(
-                'Пользователь с указанными данными уже существует.',
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        user, _ = CustomUser.objects.get_or_create(
+            username=username,
+            email=email
+        )
+        confirmation_code = default_token_generator.make_token(user)
+        user.confirmation_code = confirmation_code
+        user.save()
         send_mail(
             subject='Код регистрации',
             message=f'Ваш код для регистрации: {confirmation_code}',

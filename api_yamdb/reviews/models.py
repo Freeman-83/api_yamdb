@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class CustomUser(AbstractUser):
+    """Кастомная модель юзера для его создания."""
     USER = 'user'
     MODERATOR = 'moderator'
     ADMIN = 'admin'
@@ -26,7 +27,7 @@ class CustomUser(AbstractUser):
         choices=ROLE_CHOICES,
         default=USER
     )
-    confirmation_code = models.IntegerField(default=10001)
+    confirmation_code = models.CharField(max_length=254)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
