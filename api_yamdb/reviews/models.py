@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class CustomUser(AbstractUser):
-    """Кастомная модель юзера для его создания."""
+    """Кастомная модель юзера."""
     USER = 'user'
     MODERATOR = 'moderator'
     ADMIN = 'admin'
@@ -124,7 +124,7 @@ class TitleGenre(models.Model):
 
 
 class Review(models.Model):
-    """Отзывы на произведения. Отзыв привязан к определённому произведению."""
+    """Модель отзыва на произведение."""
     title = models.ForeignKey(
         Title,
         verbose_name='Произведение',
@@ -159,7 +159,7 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    """Комментарии к отзывам. Комментарий привязан к определённому отзыву"""
+    """Модель комментария к отзыву."""
     review = models.ForeignKey(
         Review,
         verbose_name='Отзыв',
