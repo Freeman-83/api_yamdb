@@ -21,7 +21,7 @@ from reviews.models import (CustomUser,
 from .serializers import (AdminUserDetailSerializer,
                           CategorySerializer,
                           CommentSerializer,
-                          EmailSerializer,
+                          UserRegistrationSerializer,
                           GenreSerializer,
                           ReviewSerializer,
                           TitleSerializer,
@@ -136,7 +136,7 @@ class UserRegistration(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = EmailSerializer(data=request.data)
+        serializer = UserRegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = serializer.data['username']
         email = serializer.data['email']

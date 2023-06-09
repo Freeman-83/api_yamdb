@@ -116,7 +116,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'pub_date')
 
 
-class EmailSerializer(serializers.Serializer):
+class UserRegistrationSerializer(serializers.Serializer):
     """Сериализатор для отправки кода через email."""
     username = serializers.CharField(max_length=150, required=True)
     email = serializers.EmailField(max_length=254, required=True)
@@ -128,18 +128,15 @@ class EmailSerializer(serializers.Serializer):
             raise serializers.ValidationError("Имя 'me' запрещено")
         if not re.match(r'^[\w.@+-]+$', username):
             raise serializers.ValidationError(
-                'Некорректный формат введенного логина.'
+                f'Некорректный формат введенного логина: {username}.'
             )
-        if CustomUser.objects.filter(
+        if (CustomUser.objects.filter(
             username=username) and not CustomUser.objects.filter(
-                email=email):
+                email=email)) or (CustomUser.objects.filter(
+                email=email) and not CustomUser.objects.filter(
+                username=username)):
             raise serializers.ValidationError(
-                "Пользователь зарегистрирован с другой почтой")
-        if CustomUser.objects.filter(
-            email=email) and not CustomUser.objects.filter(
-                username=username):
-            raise serializers.ValidationError(
-                "Пользователь зарегистрирован с другим логином.")
+                "Пользователь зарегистрирован с другими данными.")
         return data
 
 
