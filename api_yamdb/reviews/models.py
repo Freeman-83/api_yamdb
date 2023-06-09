@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class CustomUser(AbstractUser):
+    """Кастомная модель юзера для его создания."""
     USER = 'user'
     MODERATOR = 'moderator'
     ADMIN = 'admin'
@@ -26,7 +27,7 @@ class CustomUser(AbstractUser):
         choices=ROLE_CHOICES,
         default=USER
     )
-    confirmation_code = models.IntegerField(default=10001)
+    confirmation_code = models.CharField(max_length=254)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -51,6 +52,7 @@ class CustomUser(AbstractUser):
 
 
 class Category(models.Model):
+    """Модель категорий - типов произведений."""
     name = models.CharField('Категория', unique=True, max_length=256)
     slug = models.SlugField('URL_category', unique=True, max_length=50)
 
@@ -64,6 +66,7 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
+    """Модель жанров произведений."""
     name = models.CharField('Жанр', unique=True, max_length=256)
     slug = models.SlugField('URL_genre', unique=True, max_length=50)
 
@@ -77,6 +80,7 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
+    """Модель произведений, к которым будут писать отзывы."""
     name = models.CharField('Наименование произведения', max_length=256)
     year = models.IntegerField('Дата выхода')
     description = models.TextField('Описание', null=True, blank=True)
@@ -101,6 +105,7 @@ class Title(models.Model):
 
 
 class TitleGenre(models.Model):
+    """Модель для связи 'произведене-жанр'."""
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
@@ -117,6 +122,7 @@ class TitleGenre(models.Model):
 
 
 class Review(models.Model):
+    """Модель для отзывов, оставляемых к произведениям."""
     title = models.ForeignKey(
         Title,
         verbose_name='Произведение',
@@ -151,6 +157,7 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    """Модель для комментариев к отзывам."""
     review = models.ForeignKey(
         Review,
         verbose_name='Отзыв',
