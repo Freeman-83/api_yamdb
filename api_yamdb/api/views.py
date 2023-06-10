@@ -40,43 +40,24 @@ class CreateDeleteListViewSet(mixins.CreateModelMixin,
                               mixins.DestroyModelMixin,
                               mixins.ListModelMixin,
                               viewsets.GenericViewSet):
-    pass
+    
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = pagination.PageNumberPagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class CategoryViewSet(CreateDeleteListViewSet):
     """Вьюсет для категорий."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    pagination_class = pagination.PageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-
-    def destroy(self, request, *args, **kwargs):
-        category = get_object_or_404(Category, slug=kwargs['pk'])
-        self.perform_destroy(category)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def perform_destroy(self, category):
-        category.delete()
 
 
 class GenreViewSet(CreateDeleteListViewSet):
     """Вьюсет для жанров."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    pagination_class = pagination.PageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-
-    def destroy(self, request, *args, **kwargs):
-        genre = get_object_or_404(Genre, slug=kwargs['pk'])
-        self.perform_destroy(genre)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def perform_destroy(self, category):
-        category.delete()
 
 
 class TitleViewSet(viewsets.ModelViewSet):
