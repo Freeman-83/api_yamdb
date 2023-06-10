@@ -122,13 +122,17 @@ class UserRegistrationSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254, required=True)
 
     def validate_username(self, data):
+        error_list = []
         username = data
         email = self.initial_data.get('email')
         if username == 'me':
             raise serializers.ValidationError("Имя 'me' запрещено")
-        if not re.match(r'^[\w.@+-]+$', username):
+        for symbol in username:
+            if not re.search(r'^[\w.@+-]+$', symbol):
+                error_list.append(symbol)
+        if error_list:
             raise serializers.ValidationError(
-                f'Некорректный формат введенного логина: {username}.'
+                f'Символы {"".join(error_list)} недопустимы'
             )
         if (CustomUser.objects.filter(
             username=username) and not CustomUser.objects.filter(
