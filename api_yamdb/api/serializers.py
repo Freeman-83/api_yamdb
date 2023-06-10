@@ -1,6 +1,7 @@
 import datetime as dt
 import re
 
+from django.db.models import Q
 from rest_framework import serializers, validators
 from rest_framework.generics import get_object_or_404
 from rest_framework.exceptions import ValidationError
@@ -129,11 +130,8 @@ class UserRegistrationSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 f'Символы {"".join(error_list)} недопустимы'
             )
-        if (CustomUser.objects.filter(
-            username=username) and not CustomUser.objects.filter(
-                email=email)) or (CustomUser.objects.filter(
-                email=email) and not CustomUser.objects.filter(
-                username=username)):
+        if CustomUser.objects.filter(Q(username=username) & ~Q(email=email)
+                                     | Q(email=email) & ~Q(username=username)):
             raise serializers.ValidationError(
                 "Пользователь зарегистрирован с другими данными."
             )
